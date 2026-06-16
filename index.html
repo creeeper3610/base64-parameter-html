@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64デコーダー（安全版）</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+
+    <h2>デコードされたコード内容</h2>
+    <!-- 悪意のあるHTML/JSが実行されないよう、textContentを使ってテキストとして出力します -->
+    <pre id="output">パラメータにデータがありません、または不正なデータです。</pre>
+
+    <script>
+        // 1. URLパラメータから 'html-base64' の値を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const base64Data = urlParams.get('html-base64');
+
+        if (base64Data) {
+            try {
+                // 2. Base64をデコード（UTF-8対応の一般的なデコード処理）
+                const binString = atob(base64Data);
+                const bytes = Uint8Array.from(binString, (m) => m.codePointAt(0));
+                const decodedText = new TextDecoder().decode(bytes);
+
+                // 3. 安全に画面へ表示
+                // innerHTMLではなくtextContentを使用することで、HTMLタグやスクリプトが無効化されます
+                document.getElementById('output').textContent = decodedText;
+            } catch (error) {
+                document.getElementById('output').textContent = 'エラー: Base64のデコードに失敗しました。';
+            }
+        }
+    </script>
+
+</body>
+</html>
