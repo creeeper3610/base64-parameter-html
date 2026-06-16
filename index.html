@@ -5,46 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Base64 URL Decoder</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        #errorMessage { color: red; font-weight: bold; }
-        /* 展開されたHTMLのコンテナ */
-        #renderArea { border: 1px solid #ccc; padding: 15px; border-radius: 4px; min-height: 100px; }
+        body { margin: 0; padding: 0; }
     </style>
 </head>
 <body>
 
-    <div id="errorMessage"></div>
-    <div id="renderArea">パラメータに有効なBase64コードがありません。</div>
+    <!-- エラー時のみここに表示されます -->
+    <div id="errorMessage" style="color: red; font-weight: bold; padding: 10px;"></div>
+    
+    <!-- デコードされたHTMLがそのまま展開されるエリア -->
+    <div id="renderArea"></div>
 
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            // 1. URLパラメータから 'html-base64' を取得
             const urlParams = new URLSearchParams(window.location.search);
-            const input = urlParams.get('html-base64');
-
-            const errorDiv = document.getElementById('errorMessage');
-            const renderDiv = document.getElementById('renderArea');
+            let input = urlParams.get('html-base64');
 
             if (!input) return;
 
+            // 【重要】URLパラメータの仕様で「+」が「半角スペース」に化けるのを元の「+」に戻します
+            input = input.trim().replace(/ /g, '+');
+
+            document.getElementById('errorMessage').textContent = "";
+
+            // 以下、ご提示いただいた「processDecode」のロジックをそのまま実行
             try {
-                // 2. 提示されたスクリプトと同様のUTF-8デコード処理
-                const binaryString = atob(input.trim());
+                const binaryString = atob(input);
                 const len = binaryString.length;
                 const bytes = new Uint8Array(len);
-                for (let i = 0; i < len; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
+                for (let i = 0; i < len; i++) { 
+                    bytes[i] = binaryString.charCodeAt(i); 
                 }
                 const decodedHtml = new TextDecoder('utf-8').decode(bytes);
 
-                // 3. デコードされたコンテンツの描画
-                // ※文字列として中身を確認したい場合は、以下を renderDiv.textContent = decodedHtml; に変更してください。
-                renderDiv.innerHTML = decodedHtml;
-                errorDiv.textContent = "";
+                // サイトにそのままhtmlを表示
+                document.getElementById('renderArea').innerHTML = decodedHtml;
 
             } catch (e) {
-                errorDiv.textContent = "正しいBase64コードではないか、デコードに失敗しました。";
-                renderDiv.textContent = "";
+                document.getElementById('errorMessage').textContent = "正しいBase64コードではありません。";
             }
         });
     </script>
