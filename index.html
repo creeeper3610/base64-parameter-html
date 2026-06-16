@@ -3,37 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base64デコーダー（安全版）</title>
+    <title>Base64 URL Decoder</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        body { font-family: sans-serif; margin: 20px; }
+        #errorMessage { color: red; font-weight: bold; }
+        /* 展開されたHTMLのコンテナ */
+        #renderArea { border: 1px solid #ccc; padding: 15px; border-radius: 4px; min-height: 100px; }
     </style>
 </head>
 <body>
 
-    <h2>デコードされたコード内容</h2>
-    <!-- 悪意のあるHTML/JSが実行されないよう、textContentを使ってテキストとして出力します -->
-    <pre id="output">パラメータにデータがありません、または不正なデータです。</pre>
+    <div id="errorMessage"></div>
+    <div id="renderArea">パラメータに有効なBase64コードがありません。</div>
 
     <script>
-        // 1. URLパラメータから 'html-base64' の値を取得
-        const urlParams = new URLSearchParams(window.location.search);
-        const base64Data = urlParams.get('html-base64');
+        window.addEventListener('DOMContentLoaded', () => {
+            // 1. URLパラメータから 'html-base64' を取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const input = urlParams.get('html-base64');
 
-        if (base64Data) {
+            const errorDiv = document.getElementById('errorMessage');
+            const renderDiv = document.getElementById('renderArea');
+
+            if (!input) return;
+
             try {
-                // 2. Base64をデコード（UTF-8対応の一般的なデコード処理）
-                const binString = atob(base64Data);
-                const bytes = Uint8Array.from(binString, (m) => m.codePointAt(0));
-                const decodedText = new TextDecoder().decode(bytes);
+                // 2. 提示されたスクリプトと同様のUTF-8デコード処理
+                const binaryString = atob(input.trim());
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const decodedHtml = new TextDecoder('utf-8').decode(bytes);
 
-                // 3. 安全に画面へ表示
-                // innerHTMLではなくtextContentを使用することで、HTMLタグやスクリプトが無効化されます
-                document.getElementById('output').textContent = decodedText;
-            } catch (error) {
-                document.getElementById('output').textContent = 'エラー: Base64のデコードに失敗しました。';
+                // 3. デコードされたコンテンツの描画
+                // ※文字列として中身を確認したい場合は、以下を renderDiv.textContent = decodedHtml; に変更してください。
+                renderDiv.innerHTML = decodedHtml;
+                errorDiv.textContent = "";
+
+            } catch (e) {
+                errorDiv.textContent = "正しいBase64コードではないか、デコードに失敗しました。";
+                renderDiv.textContent = "";
             }
-        }
+        });
     </script>
 
 </body>
